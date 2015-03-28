@@ -1,0 +1,301 @@
+<!doctype html>
+<html>
+
+<head>
+	
+	<meta charset="utf-8">
+	
+	<title>Pick pics demo page!</title>
+	<meta name="description" content="">
+	<meta name="keywords" content="">
+	
+	<style>
+		<!--
+			.booyah,
+			.booyah ul {
+				margin: 0;
+				padding: 0;
+			}
+				.booyah li {
+					list-style: none;
+					background: #eee;
+					border: 1px solid #666;
+					margin: -1px 0;
+					padding: 20px;
+				}
+					.booyah li li {
+						background: #fff;
+						border-color: #999;
+						padding: 10px;
+					}
+				.booyah li img {
+					display: block;
+					margin-bottom: 10px;
+				}
+				.booyah li p {
+					margin: 0;
+					padding: 0;
+				}
+				
+				table {
+					color:#333;
+					border: 1px solid #666;
+					border-collapse: collapse;
+					border-spacing: 0;
+					width: 100%;
+					margin: 10px 0;
+				}
+					table caption {
+						text-align: left;
+						padding-bottom: 5px;
+					}
+					table th,
+					table td { text-align: center; }
+					table th {
+						padding: 10px;
+						border: 1px solid #666;
+						background: #ddd;
+					}
+					table td {
+						border: 1px solid #666;
+						padding: 10px;
+						background: #fff;
+					}
+		-->
+	</style>
+	
+</head>
+<body>
+	
+	<table>
+		<caption>The Register-Guard <code>dbo.Priority</code> table (to give you an idea of what our setup is like).</caption>
+		<thead>
+			<tr>
+				<th><code>priorityId</code></th>
+				<th><code>priorityName</code></th>
+			</tr>
+		</thead>
+		<tr>
+			<td>0</td>
+			<td>-</td>
+		</tr>
+		<tr>
+			<td>2</td>
+			<td>03</td>
+		</tr>
+		<tr>
+			<td>3</td>
+			<td>04</td>
+		</tr>
+		<tr>
+			<td>4</td>
+			<td>01</td>
+		</tr>
+		<tr>
+			<td>5</td>
+			<td>02</td>
+		</tr>
+		<tr>
+			<td>6</td>
+			<td>Mug</td>
+		</tr>
+		<tr>
+			<td>7</td>
+			<td>Not for Web</td>
+		</tr>
+		<tr>
+			<td>8</td>
+			<td>05</td>
+		</tr>
+	</table>
+	
+	<hr>
+	
+	<section>
+		
+		<h1>Creation of a <code>dt.cms.schema.CMSStory</code> object.</h1>
+		
+		<csp:object name="gStory" classname="dt.cms.schema.CMSStory" objid="29263427" />
+		
+		<p>#(gStory)#</p>
+		
+	</section>
+	
+	<hr>
+	
+	<section>
+		
+		<h1>Example #1: Bare minimum requirements to get the tag working.</h1>
+		
+		<p>Both "position" and "story" are required tag attributes.</p>
+		
+		<custom:rg:get:pics story="#(gStory)#" position="288pxw">
+			
+			#(value.%Id())#
+			<br>
+			
+		</custom:rg:get:pics>
+		
+	</section>
+	
+	<hr>
+	
+	<section>
+		
+		<h1>Example #2: Reversing the "direction".</h1>
+		
+		<custom:rg:get:pics story="#(gStory)#" position="288pxw" direction="backward">
+			
+			#(value.%Id())#
+			<br>
+			
+		</custom:rg:get:pics>
+		
+	</section>
+	
+	<hr>
+	
+	<section>
+		
+		<h1>Example #3: Custom <code>ORDER BY</code> (advanced technique).</h1>
+		
+		<custom:rg:get:pics story="#(gStory)#" position="288pxw" order="fh.priorityId ASC">
+			
+			#(value.%Id())#
+			<br>
+			
+		</custom:rg:get:pics>
+		
+	</section>
+	
+	<hr>
+	
+	<section>
+		
+		<h1>Example #4: Using a story ID as a string.</h1>
+		
+		<p>Most attributes will work with <a href="http://docs.intersystems.com/cache20091/csp/docbook/DocBook.UI.Page.cls?KEY=RCSP_DIRECTIVE_REXP">runtime</a>/<a href="http://docs.intersystems.com/cache20091/csp/docbook/DocBook.UI.Page.cls?KEY=RCSP_DIRECTIVE_CEXP">compile-time</a> expressions.</p>
+		
+		<custom:rg:get:pics story="29263427" position="288pxw">
+			
+			#(value.%Id())#
+			<br>
+			
+		</custom:rg:get:pics>
+		
+	</section>
+	
+	<hr>
+	
+	<section>
+		
+		<h1>Example #5: Include a specific priority.</h1>
+		
+		<custom:rg:get:pics story="#(gStory)#" position="288pxw" include="4" items="1">
+			
+			#(value.%Id())#
+			
+		</custom:rg:get:pics>
+		
+	</section>
+	
+	<hr>
+	
+	<section>
+		
+		<h1>Example #6: Exclude multiple priorities.</h1>
+		
+		<custom:rg:get:pics story="#(gStory)#" position="288pxw" exclude="4, 6, 7">
+			
+			#(value.%Id())#
+			<br>
+			
+		</custom:rg:get:pics>
+		
+	</section>
+	
+	<hr>
+	
+	<section>
+		
+		<h1>Example #7: Full-featured example.</h1>
+		
+		#[ new position set position = "288pxw" ]#
+
+		
+		<custom:rg:get:pics story="#(gStory.%Id())#" position="#(position)#" exclude="4, 6, 7">
+			
+			<csp:if condition='count = 1'>
+				<ul class="booyah">
+			</csp:if>
+				
+				<li>
+					<dti:story:image pictid="#(value.%Id())#" />
+					<ul>
+						<li>ID: #(value.%Id())#</li>
+						<li>Obj: #(obj)#</li>
+						<li>Count: #(count)#</li>
+						<li>Total: #(total)#</li>
+						<li><p><dti:story:image:caption id="#(value.fileheaderId)#" field="#(position)#" property="caption" table="fileheader" /></p></li>
+					</ul>
+				</li>
+				
+			<csp:if condition='count = total'>
+				</ul>
+			</csp:if>
+			
+		</custom:rg:get:pics>
+		
+		#[ kill position ]#
+		
+	</section>
+	
+	<hr>
+	
+	<section>
+		
+		<h1>API call.</h1>
+		
+		#[ new pics set pics = ##class(custom.rg.Pick).pics(gStory, "288pxw") ]#
+		
+		<csp:loop counter="x" from="1" to="#(pics.Count())#">
+			
+			#[ new pic set pic = pics.GetAt(x) ]#
+			
+			#(pic.%Id())#
+			<br>
+			
+		</csp:loop>
+		
+		#[ kill pics ]#
+		
+	</section>
+	
+	<hr>
+	
+	<section>
+		
+		<h1>Debug:</h1>
+		
+		<script language="cache" runat="server">
+			
+			; Debug:
+			write !, "<pre>"
+			try {
+				set currIO = ##class(%SYS.NLS.Device).SetIO("HTML")
+				zwrite
+			}
+			catch {
+				write "ERROR: ", $ZERROR
+			}
+			if ($get(currIO) '= "") {
+				do ##class(%SYS.NLS.Device).SetIO(currIO)
+			}
+			write "</pre>"
+			
+		</script>
+		
+	</section>
+	
+</body>
+</html>

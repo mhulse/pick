@@ -1,0 +1,131 @@
+<csr:rule name="custom.rg.GetPicsRule" match="custom:rg:get:pics">
+	
+	<csr:class super="dt.common.page.Rule, %CSP.RuleBlock" />
+	
+	<csr:description>
+		
+		<h1>custom.rg.GetPicsRule</h1>
+		
+		<ul>
+			<li>Version: v1.1.0</li>
+			<li>Created: Monday, January 7, 2013</li>
+			<li>Modified: Monday, January 28, 2013</li>
+			<li>Docs: <a href="https://github.com/mhulse/pick">https://github.com/mhulse/pick</a></li>
+		</ul>
+		
+		<p>
+			The <code>&lt;custom:rg:get:pics&gt;</code> RULE (a.k.a tag) returns a <class>%ListOfObjects</class> of <class>dt.cms.schema.CMSPicture</class> objects from a <class>dt.cms.schema.CMSStory</class>.
+			<br>
+			Each object has been assigned to the attribute <code>value</code> which you can access in each itteration of the tag's loop.
+		</p>
+		
+	</csr:description>
+	
+	<csr:attribute name="story"     description="A dt.cms.schema.CMSStory object or a valid CMSStory ID (required)."                             type="story:OBJECT"     required />
+	<csr:attribute name="position"  description="Picture item position (required)."                                                              type="position:STRING"  required />
+	<csr:attribute name="include"   description="Include only these priorities (comma delimited list)."                                          type="include:STRING"            />
+	<csr:attribute name="exclude"   description="Exclude only these priorities (comma delimited list)."                                          type="exclude:STRING"            />
+	<csr:attribute name="items"     description="Number of CMSPicture objects to return; the default number '0', which returns all CMSPictures." type="items:INTEGER"             />
+	<csr:attribute name="order"     description="Custom ORDER BY, used in SQL statement."                                                        type="order:STRING"              />
+	<csr:attribute name="direction" description="Direction of iteration; either forward (default) or backward."                                  type="direction:STRING"          />
+	<csr:attribute name="count"     description="Loop counter name; the default name is 'count'."                                                type="count:INTEGER"             />
+	<csr:attribute name="value"     description="CMSPicture object name; the default name is 'value'."                                           type="value:OBJECT"              />
+	<csr:attribute name="obj"       description="Local %ListOfObjects object variable name; the default name is 'obj'."                          type="obj:OBJECT"                />
+	<csr:attribute name="total"     description="Total number of CMSPicture objects returned."                                                   type="total:INTEGER"             />
+	
+	<csr:action>
+		
+		<script language="cache" runat="compiler">
+			do ##this.RenderDTStartTag()
+		</script>
+		
+		<script language="cache" runat="compiler">
+			
+			; Initialize:
+			new csr
+			
+			; QuoteAttribute: The value is quoted for substitution with #()#, ##( )## and ##''## expressions resolved.
+			set csr("story")    = ##this.QuoteAttribute("story",    "")
+			set csr("position") = ##this.QuoteAttribute("position", "")
+			set csr("include")  = ##this.QuoteAttribute("include",  "")
+			set csr("exclude")  = ##this.QuoteAttribute("exclude",  "")
+			set csr("items")    = ##this.QuoteAttribute("items",    "")
+			set csr("order")    = ##this.QuoteAttribute("order",    "")
+			
+			; GetAttribute: The value already has any ##( )## and ##''## expressions resolved.
+			set csr("direction") = ##this.GetAttribute("direction", "forward")
+			set csr("count")     = ##this.GetAttribute("count",       "count")
+			set csr("value")     = ##this.GetAttribute("value",       "value")
+			set csr("obj")       = ##this.GetAttribute("obj",           "obj")
+			set csr("total")     = ##this.GetAttribute("total",       "total")
+			
+			; Should the list be ouput in a forward or backward direction?
+			set csr("next") = $case($zconvert(csr("direction"), "U"), "BACKWARD":"Previous", :"Next")
+			
+			; Initialize blocks and labels:
+			do ##this.NewBlock()
+			set ##this.EndLabel = ##this.GetNewLabel()
+			set ##this.NextLabel = ##this.GetNewLabel()
+			
+			/*----------------------------------( OUTPUT )----------------------------------*/
+			
+			; New vars:
+			do ##this.WriteServer(" new " _ csr("count") _ ", " _ csr("value") _ ", " _ csr("obj") _ ", " _ csr("total") ) // Warning: You must/should declare all 'runat="server"' variables as 'new'!
+			
+			; Get the pics:
+			do ##this.WriteServer(" set " _ csr("obj") _ " = ##class(custom.rg.Pick).pics(" _ csr("story") _ ", " _ csr("position") _ ", " _ csr("include") _ ", " _ csr("exclude") _ ", " _ csr("items") _ ", " _ csr("order") _ ") ")
+			
+			; Count the pics:
+			do ##this.WriteServer(" set " _ csr("total") _ " = " _ csr("obj") _ ".Count() ")
+			
+			; Quit if there's no pics:
+			do ##this.WriteServer(" if (" _ csr("total") _ " = 0) { ")
+			do ##this.WriteServer(" 	goto " _ ##this.EndLabel _ " ;{ ")
+			do ##this.WriteServer(" } ")
+			
+			; Initialze count:
+			do ##this.WriteServer(" set " _ csr("count") _ " = """" ")
+			
+			; Setup NextLabel for looping:
+			do ##this.WriteServer( ##this.NextLabel )
+			
+			; Get a picture object:
+			do ##this.WriteServer(" set " _ csr("value") _ " = " _ csr("obj") _ ".Get" _ csr("next") _ "(." _ csr("count") _ ") ")
+			
+			; Check to see if we're done looping:
+			do ##this.WriteServer(" if (" _ csr("count") _ " = """") { ")
+			do ##this.WriteServer(" 	goto " _ ##this.EndLabel _ " ;{ ") // We're done, go to EndLabel.
+			do ##this.WriteServer(" } ")
+			
+		</script>
+		
+		<csr:children />
+		
+		<script language="cache" runat="compiler">
+			
+			; Handle labels and blocks:
+			do ##this.WriteServer(" goto " _ ##this.NextLabel) // Go back up!
+			do ##this.WriteServer( ##this.EndLabel _ " ;} ") // We're done looping...
+			do ##this.RemoveBlock() // Remove the block!
+			
+			; Initialize:
+			new csr
+			
+			; Get attributes:
+			set csr("count") = ##this.GetAttribute("count", "count")
+			set csr("value") = ##this.GetAttribute("value", "value")
+			set csr("obj")   = ##this.GetAttribute("obj",     "obj")
+			set csr("total") = ##this.GetAttribute("total", "total")
+			
+			; Server garbage collection:
+			do ##this.WriteServer(" kill " _ csr("count") _ ", " _ csr("value") _ ", " _ csr("obj") _ ", " _ csr("total") )
+			
+		</script>
+		
+		<script language="cache" runat="compiler">
+			do ##this.RenderDTEndTag()
+		</script>
+		
+	</csr:action>
+	
+</csr:rule>
